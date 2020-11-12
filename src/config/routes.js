@@ -6,5 +6,5 @@ module.exports = function (server) {
   server.use('/api', api);
 
   //Rota customer
-  CustomerRouter.register(api, '/customers');
+  CustomerRouter.register(api, '/clientes');
 };

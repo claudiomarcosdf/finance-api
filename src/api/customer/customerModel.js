@@ -3,6 +3,28 @@ const mongoose = restful.mongoose;
 
 const beautifyUnique = require('mongoose-beautiful-unique-validation');
 
+function generateCode() {
+  const number1 = Math.round(Math.random() * 36)
+    .toString()
+    .substr(0, 1);
+  const number2 = Math.round(Math.random() * 36)
+    .toString()
+    .substr(0, 1);
+  //prettier-ignore
+  const letter1 = (Math.random() * 26)
+    .toString(26)
+    .replace(/[^a-z]+/g, '')
+    .substr(0, 1)
+    .toUpperCase();
+  const letter2 = (Math.random() * 26)
+    .toString(26)
+    .replace(/[^a-z]+/g, '')
+    .substr(0, 1)
+    .toUpperCase();
+
+  return `${letter1}${number1}${number2}${letter2}`;
+}
+
 const investmentSchema = new mongoose.Schema({
   date_input: { type: Date, required: true, default: Date.now },
   capital: { type: Number, required: true, min: 0.0 },
@@ -23,16 +45,28 @@ const contact = {
   phone: { type: String },
 };
 
+const checkingCopy = {
+  cpf_img: { type: String },
+  rg_img: { type: String },
+  residence_img: { type: String },
+};
+
 const personalDataSchema = new mongoose.Schema({
+  photo_name: { type: String }, //tipo_+code ex. ft_D48E.jpg
   cpf: { type: String, unique: true, required: true },
   rg: { type: String },
-  gender: { type: String, enum: ['M', 'F'] },
+  gender: { type: String, enum: ['Masculino', 'Feminino'] },
   nationality: { type: String },
-  civil_status: { type: String, enum: ['S', 'C', 'V', 'D'] },
+  civil_status: {
+    type: String,
+    enum: ['Solteiro', 'Casado', 'Viúvo', 'Divorciado'],
+  },
   father_name: { type: String },
   mother_name: { type: String },
   residence: { type: residence },
   contacts: { type: contact },
+  indicated: { type: String },
+  checking_copy: { type: checkingCopy },
 });
 
 const bankDataSchema = new mongoose.Schema({
@@ -42,11 +76,15 @@ const bankDataSchema = new mongoose.Schema({
 });
 
 const profileSchema = new mongoose.Schema({
-  note: { type: Number },
+  score: { type: Number },
 });
 
 const customerSchema = new mongoose.Schema({
-  code: { type: String, minlength: 4, maxlength: 4 },
+  code: {
+    type: String,
+    unique: true,
+    default: generateCode(),
+  },
   name: { type: String },
   email: { type: String },
   password: { type: String, required: true, min: 6, max: 12 },
