@@ -1,5 +1,6 @@
 const bodyParser = require('body-parser');
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const queryParser = require('express-query-int');
 
@@ -24,6 +25,11 @@ server.use(
 );
 
 server.use(queryParser());
+
+server.use(
+  '/files',
+  express.static(path.resolve(__dirname, '..', '..', 'tmp', 'uploads'))
+);
 
 server.listen(PORT, function () {
   console.log(`BACKEND is running on port ${PORT}.`);

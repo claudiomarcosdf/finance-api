@@ -52,7 +52,8 @@ const checkingCopy = {
 };
 
 const personalDataSchema = new mongoose.Schema({
-  photo_name: { type: String }, //tipo_+code ex. ft_D48E.jpg
+  photo_url: { type: String },
+  photo_name: { type: String },
   cpf: { type: String, unique: true, required: true },
   rg: { type: String },
   gender: { type: String, enum: ['Masculino', 'Feminino'] },
@@ -82,11 +83,10 @@ const profileSchema = new mongoose.Schema({
 const customerSchema = new mongoose.Schema({
   code: {
     type: String,
-    unique: true,
     default: generateCode(),
   },
-  name: { type: String },
-  email: { type: String },
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
   password: { type: String, required: true, min: 6, max: 12 },
   birthday: { type: Date },
   status: { type: String, enum: ['ATIVO', 'INATIVO'], default: 'ATIVO' },

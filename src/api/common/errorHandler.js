@@ -3,7 +3,7 @@ const { model } = require('mongoose');
 const nodeRestful = require('node-restful');
 
 module.exports = (req, res, next) => {
-  const bundle = req.locals.bundle;
+  const bundle = res.locals.bundle;
 
   if (bundle.errors) {
     const errors = parseErrors(bundle.errors);
