@@ -29,6 +29,7 @@ const investmentSchema = new mongoose.Schema({
   date_input: { type: Date, required: true, default: Date.now },
   capital: { type: Number, required: true, min: 0.0 },
   months: { type: Number, required: true, enum: [6, 12, 18, 24] },
+  interest: { type: Number },
   rentability: { type: Number, required: true },
 });
 
@@ -83,7 +84,8 @@ const profileSchema = new mongoose.Schema({
 const customerSchema = new mongoose.Schema({
   code: {
     type: String,
-    default: generateCode(),
+    // default: generateCode(),
+    unique: 'O código {VALUE} está sendo usado por outro cliente.',
   },
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -94,6 +96,10 @@ const customerSchema = new mongoose.Schema({
   profile: { type: profileSchema },
   bank_data: { type: bankDataSchema },
   investments: { type: [investmentSchema] },
+});
+
+customerSchema.pre('save', function () {
+  this.code = generateCode();
 });
 
 customerSchema.plugin(beautifyUnique);

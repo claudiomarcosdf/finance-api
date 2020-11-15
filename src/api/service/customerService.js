@@ -35,20 +35,18 @@ Customer.route('photo', ['post'], (req, res, next) => {
   (async () => {
     try {
       const personalData = await getPersonalData(id);
+
       const newPersonalData = {
-        ...personalData,
+        ...personalData.toJSON(),
         photo_url: url,
         photo_name: name,
       };
-      console.log(newPersonalData);
 
       if (personalData.photo_name) {
         if (personalData.photo_name !== '') {
           removeFile(personalData.photo_name);
         }
       }
-      // newPersonalData.photo_url = url;
-      // newPersonalData.photo_name = name;
 
       const customerUpdated = await Customer.findByIdAndUpdate(
         { _id: id },
