@@ -35,6 +35,7 @@ const investmentSchema = new mongoose.Schema({
 
 const residence = {
   address: { type: String },
+  complement: { type: String },
   city: { type: String },
   uf: { type: String },
   cep: { type: String },
@@ -46,7 +47,7 @@ const contact = {
   phone: { type: String },
 };
 
-const checkingCopy = {
+const docs = {
   cpf_img: { type: String },
   rg_img: { type: String },
   residence_img: { type: String },
@@ -61,14 +62,14 @@ const personalDataSchema = new mongoose.Schema({
   nationality: { type: String },
   civil_status: {
     type: String,
-    enum: ['Solteiro', 'Casado', 'Viúvo', 'Divorciado'],
+    enum: ['Solteiro(a)', 'Casado(a)', 'Viúvo(a)', 'Divorciado(a)'],
   },
   father_name: { type: String },
   mother_name: { type: String },
   residence: { type: residence },
   contacts: { type: contact },
   indicated: { type: String },
-  checking_copy: { type: checkingCopy },
+  documents: { type: docs },
 });
 
 const bankDataSchema = new mongoose.Schema({
