@@ -4,8 +4,6 @@ const multer = require('multer');
 const multerConfig = require('../../config/multer');
 const removeFile = require('./customerFileService');
 
-const { customInvestmentError } = require('../common/helpers');
-
 Customer.methods(['get', 'post', 'put', 'patch', 'delete']);
 Customer.updateOptions({
   new: true,
@@ -14,28 +12,54 @@ Customer.updateOptions({
 Customer.after('post', errorHandler).after('put', errorHandler);
 Customer.before('photo', multer(multerConfig).single('file'));
 
+/*
+ TESTAR A FUNÇÃO PUSH E PULL DO MONGOOSE PARA INSERIR E EXCLUIR UM DOCUMENTO
+ NO SUBDOCUMENTO:doc.subdocs.push({ _id: 4815162342 })
+ doc.subdocs.pull({ _id: 4815162342 }) // removed
+
+ *** PASSOU NOS TESTES !!! ***
+Customer.findById(id, (error, customer) => {
+  if (error) {
+    console.log(error);
+  } else {
+    const newCustomer = customer;
+    newCustomer.investments.push(investment);
+    newCustomer.save((error, data) => {
+      if (error) {
+         res.status(500).json({ errors: [error] });
+      } else {
+        res.status(200).json(data);
+      }
+    })
+
+    console.log(newCustomer._id);
+    console.log(newCustomer.investments);
+  }
+}); */
+
 Customer.route('investment', ['post'], (req, res, next) => {
   const id = req.query.id;
   const investment = req.body;
 
   //Funciona com async await e com callbacks
-  Customer.findById(id, (error, customer) => {
-    if (error) {
-      res.status(500).json({ errors: [error] });
-    } else {
-      const newCustomer = customer;
-      newCustomer.investments.push(investment);
 
-      newCustomer.save((error, data) => {
-        if (error) {
-          const err = customInvestmentError(error.message);
-          res.status(500).json({ errors: [err] });
-        } else {
+  getUpdatedInvestments(id, investment)
+    .then((newInvestments) => {
+      Customer.findByIdAndUpdate(
+        { _id: id },
+        { investments: newInvestments },
+        { new: true }
+      )
+        .then((data) => {
           res.status(200).json(data);
-        }
-      });
-    }
-  });
+        })
+        .catch((error) => {
+          res.status(500).json({ errors: [error] });
+        });
+    })
+    .catch((error) => {
+      res.status(500).json({ errors: [error] });
+    });
 });
 
 Customer.route('count', (req, res, next) => {
@@ -92,6 +116,14 @@ const getPersonalData = async (id) => {
   const data = await Customer.findById(id, projections);
 
   return data.personal_data;
+};
+
+const getUpdatedInvestments = async (id, newInvestment) => {
+  const projections = { _id: 0, investments: 1 };
+  const data = await Customer.findById(id, projections);
+  const investments = data.investments;
+
+  return [...investments, newInvestment];
 };
 
 module.exports = Customer;

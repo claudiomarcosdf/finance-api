@@ -2,33 +2,16 @@ const restful = require('node-restful');
 const mongoose = restful.mongoose;
 
 const beautifyUnique = require('mongoose-beautiful-unique-validation');
-
-function generateCode() {
-  const number1 = Math.round(Math.random() * 36)
-    .toString()
-    .substr(0, 1);
-  const number2 = Math.round(Math.random() * 36)
-    .toString()
-    .substr(0, 1);
-  //prettier-ignore
-  const letter1 = (Math.random() * 26)
-    .toString(26)
-    .replace(/[^a-z]+/g, '')
-    .substr(0, 1)
-    .toUpperCase();
-  const letter2 = (Math.random() * 26)
-    .toString(26)
-    .replace(/[^a-z]+/g, '')
-    .substr(0, 1)
-    .toUpperCase();
-
-  return `${letter1}${number1}${number2}${letter2}`;
-}
+const { generateCode } = require('../common/helpers');
 
 const investmentSchema = new mongoose.Schema({
   date_input: { type: Date, required: true, default: Date.now },
   capital: { type: Number, required: true, min: 0.0 },
-  months: { type: Number, required: true, enum: [6, 12, 18, 24] },
+  months: {
+    type: Number,
+    required: true,
+    enum: [6, 12, 18, 24],
+  },
   interest: { type: Number },
   rentability: { type: Number, required: true },
 });
@@ -48,9 +31,12 @@ const contact = {
 };
 
 const docs = {
-  cpf_img: { type: String },
-  rg_img: { type: String },
-  residence_img: { type: String },
+  cpf_url: { type: String },
+  cpf_name: { type: String },
+  rg_url: { type: String },
+  rg_name: { type: String },
+  residence_url: { type: String },
+  residence_name: { type: String },
 };
 
 const personalDataSchema = new mongoose.Schema({
@@ -100,7 +86,7 @@ const customerSchema = new mongoose.Schema({
 });
 
 customerSchema.pre('save', function () {
-  this.code = generateCode();
+  if (!this.code) this.code = generateCode();
 });
 
 customerSchema.plugin(beautifyUnique);
