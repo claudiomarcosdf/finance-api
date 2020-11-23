@@ -13,8 +13,10 @@ Customer.updateOptions({
 });
 Customer.after('post', errorHandler).after('put', errorHandler);
 Customer.before('photo', multer(multerConfig).single('file'));
+Customer.before('document', multer(multerConfig).single('file'));
 
 Customer.route('investment', ['post'], (req, res, next) => {
+  /*  /clientes/investment?id=xxx   */
   const id = req.query.id;
   const investment = req.body;
 
@@ -29,6 +31,29 @@ Customer.route('investment', ['post'], (req, res, next) => {
       newCustomer.save((error, data) => {
         if (error) {
           const err = customInvestmentError(error.message);
+          res.status(500).json({ errors: [err] });
+        } else {
+          res.status(200).json(data);
+        }
+      });
+    }
+  });
+});
+
+Customer.route('investment', ['delete'], (req, res, next) => {
+  /*    /clientes/investment?id=xxx&idInvestment=yyy   */
+  const id = req.query.id;
+  const idInvestment = req.query.idInvestment;
+
+  Customer.findById(id, (error, customer) => {
+    if (error) {
+      res.status(500).json({ errors: [error] });
+    } else {
+      const newCustomer = customer;
+      newCustomer.investments.pull(idInvestment);
+
+      newCustomer.save((error, data) => {
+        if (error) {
           res.status(500).json({ errors: [err] });
         } else {
           res.status(200).json(data);
@@ -82,6 +107,56 @@ Customer.route('photo', ['post'], (req, res, next) => {
         res.status(200).json(customerUpdated);
       }
     } catch (error) {
+      res.status(404).json({ errors: [error] });
+    }
+  })();
+});
+
+//prettier-ignore (http://.../clientes/document?type=cpf&id=xxx)
+Customer.route('document', ['post'], (req, res, next) => {
+  const id = req.query.id;
+  const type = req.query.type; //type document
+
+  const url = `${process.env.APP_URL}/files/`;
+  const name = req.file.key;
+
+  (async () => {
+    try {
+      const personalData = await getPersonalData(id);
+      const { documents } = personalData;
+      const type_url = `${type}_url`;
+      const type_name = `${type}_name`;
+
+      const newDocuments = {
+        ...documents,
+        [type_url]: url,
+        [type_name]: name,
+      };
+
+      if (documents) {
+        if (documents[type_name] !== '') {
+          removeFile(documents[type_name]);
+        }
+      }
+
+      const newPersonalData = {
+        ...personalData.toJSON(),
+        documents: newDocuments,
+      };
+
+      const customerUpdated = await Customer.findByIdAndUpdate(
+        { _id: id },
+        { personal_data: newPersonalData },
+        { new: true }
+      );
+
+      if (!customerUpdated) {
+        res.status(404).json({ errors: [`Erro ao adicionar ${type}.`] });
+      } else {
+        res.status(200).json(customerUpdated);
+      }
+    } catch (error) {
+      console.log(error);
       res.status(404).json({ errors: [error] });
     }
   })();
