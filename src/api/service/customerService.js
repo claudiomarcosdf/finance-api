@@ -162,6 +162,18 @@ Customer.route('document', ['post'], (req, res, next) => {
   })();
 });
 
+Customer.route('email', ['get'], (req, res, next) => {
+  const email = req.query.email;
+
+  Customer.findOne({ email }, (error, data) => {
+    if (error) {
+      res.status(500).json({ errros: [error] });
+    } else {
+      res.status(200).json(data);
+    }
+  });
+});
+
 const getPersonalData = async (id) => {
   const projections = { _id: 0, personal_data: 1 };
   const data = await Customer.findById(id, projections);
