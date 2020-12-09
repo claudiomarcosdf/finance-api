@@ -14,6 +14,23 @@ const investmentSchema = new mongoose.Schema({
   },
   interest: { type: Number },
   rentability: { type: Number, required: true },
+  status: {
+    type: String,
+    enum: [
+      '',
+      'Em análise',
+      'Aguardando comprovante',
+      'Depósito a confirmar',
+      'Aprovado e aplicado',
+      'Cancelado',
+      'Resgate solicitado',
+      'Finalizado',
+      '',
+    ],
+    default: 'Aguardando comprovante',
+  },
+  voucher_url: { type: String },
+  voucher_name: { type: String },
 });
 
 const residence = {
@@ -66,6 +83,7 @@ const bankDataSchema = new mongoose.Schema({
 
 const profileSchema = new mongoose.Schema({
   score: { type: Number },
+  date_at: { type: Date },
 });
 
 const customerSchema = new mongoose.Schema({
@@ -84,6 +102,7 @@ const customerSchema = new mongoose.Schema({
   profile: { type: profileSchema },
   bank_data: { type: bankDataSchema },
   investments: { type: [investmentSchema] },
+  account_date: { type: Date, default: Date.now },
 });
 
 customerSchema.pre('save', function () {

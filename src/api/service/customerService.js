@@ -14,9 +14,10 @@ Customer.updateOptions({
 Customer.after('post', errorHandler).after('put', errorHandler);
 Customer.before('photo', multer(multerConfig).single('file'));
 Customer.before('document', multer(multerConfig).single('file'));
+Customer.before('voucher', multer(multerConfig).single('file'));
 
 Customer.route('investment', ['post'], (req, res, next) => {
-  /*  /clientes/investment?id=xxx   */
+  /*  [POST] /clientes/investment?id=xxx   */
   const id = req.query.id;
   const investment = req.body;
 
@@ -41,20 +42,154 @@ Customer.route('investment', ['post'], (req, res, next) => {
 });
 
 Customer.route('investment', ['delete'], (req, res, next) => {
-  /*    /clientes/investment?id=xxx&idInvestment=yyy   */
+  /* [DELETE]   /clientes/investment?id=xxx&investmentId=yyy   */
   const id = req.query.id;
-  const idInvestment = req.query.idInvestment;
+  const investmentId = req.query.investmentId;
 
   Customer.findById(id, (error, customer) => {
     if (error) {
       res.status(500).json({ errors: [error] });
     } else {
       const newCustomer = customer;
-      newCustomer.investments.pull(idInvestment);
+      newCustomer.investments.pull(investmentId);
 
       newCustomer.save((error, data) => {
         if (error) {
           res.status(500).json({ errors: [err] });
+        } else {
+          res.status(200).json(data);
+        }
+      });
+    }
+  });
+});
+
+Customer.route('investment', ['put'], (req, res, next) => {
+  /* [PUT]   /clientes/investment?id=xxx&investmentId=yyy   */
+  const id = req.query.id;
+  const investmentId = req.query.investmentId;
+  const fieldsToUpdate = req.body; //{capital: xxx, status: 'test'}
+
+  Customer.findById(id, (error, customer) => {
+    if (error) {
+      res.status(500).json({ errors: [error] });
+    } else {
+      const newCustomer = customer;
+
+      const currentInvestment = newCustomer.investments.id(investmentId);
+      const idx = newCustomer.investments.indexOf(currentInvestment);
+
+      fieldsToUpdate._id = currentInvestment._id;
+      newCustomer.investments[idx] = fieldsToUpdate;
+
+      newCustomer.save((error, data) => {
+        if (error) {
+          res.status(500).json({ errors: ['Erro ao atualizar investimento'] });
+        } else {
+          res.status(200).json(data);
+        }
+      });
+    }
+  });
+});
+
+Customer.route('cancel-investment', ['put'], (req, res, next) => {
+  /* [PUT]   /clientes/cancel-investment?id=xxx&investmentId=yyy   */
+  // CHANGE STATUS TO CANCELADO ONLY
+  const id = req.query.id;
+  const investmentId = req.query.investmentId;
+  const status = 'Cancelado';
+
+  Customer.findById(id, (error, customer) => {
+    if (error) {
+      res.status(500).json({ errors: [error] });
+    } else {
+      const customerToSave = findInvestmentAndEditStatus(
+        customer,
+        investmentId,
+        status
+      );
+
+      customerToSave.save((error, data) => {
+        if (error) {
+          res.status(500).json({ errors: ['Erro ao cancelar investimento'] });
+        } else {
+          res.status(200).json(data);
+        }
+      });
+    }
+  });
+});
+
+Customer.route('rescue-investment', ['put'], (req, res, next) => {
+  /* [PUT]   /clientes/rescue-investment?id=xxx&investmentId=yyy   */
+  // CHANGE STATUS TO Resgate solicitado ONLY
+  const id = req.query.id;
+  const investmentId = req.query.investmentId;
+  const status = 'Resgate solicitado';
+
+  Customer.findById(id, (error, customer) => {
+    if (error) {
+      res.status(500).json({ errors: [error] });
+    } else {
+      const customerToSave = findInvestmentAndEditStatus(
+        customer,
+        investmentId,
+        status
+      );
+
+      customerToSave.save((error, data) => {
+        if (error) {
+          res.status(500).json({ errors: ['Erro ao solicitar resgate'] });
+        } else {
+          res.status(200).json(data);
+        }
+      });
+    }
+  });
+});
+
+const findInvestmentAndEditStatus = (customer, investmentId, status) => {
+  const currentInvestment = customer.investments.id(investmentId);
+  const idx = customer.investments.indexOf(currentInvestment);
+
+  const fieldsToUpdate = {
+    ...currentInvestment.toJSON(),
+    status: status,
+  };
+
+  fieldsToUpdate._id = currentInvestment._id;
+  customer.investments[idx] = fieldsToUpdate;
+
+  return customer;
+};
+
+Customer.route('voucher', ['post'], (req, res, next) => {
+  /* [POST]   /clientes/voucher?id=xxx&investmentId=yyy   */
+  // EM DESENVOLVIMENTO
+  const id = req.query.id;
+  const investmentId = req.query.investmentId;
+  const url = `${process.env.APP_URL}/files/`;
+  const name = req.file.key;
+
+  Customer.findById(id, (error, customer) => {
+    if (error) {
+      res.status(500).json({ errors: [error] });
+    } else {
+      const currentInvestment = customer.investments.id(investmentId);
+      const idx = customer.investments.indexOf(currentInvestment);
+      const fieldsToUpdate = {
+        ...currentInvestment.toJSON(),
+        status: 'Depósito a confirmar',
+        voucher_url: url,
+        voucher_name: name,
+      };
+      fieldsToUpdate._id = currentInvestment._id;
+      customer.investments[idx] = fieldsToUpdate;
+
+      customer.save((error, data) => {
+        if (error) {
+          res.status(500).json({ errors: ['Erro ao salvar comprovante'] });
         } else {
           res.status(200).json(data);
         }
